@@ -2,9 +2,22 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const pool = require('./db');
+const http = require("http");
+
+const { neon } = require("@neondatabase/serverless");
+
 
 const app = express();
 require('dotenv').config();
+
+const sql = neon(process.env.DATABASE_URL);
+
+const requestHandler = async (req, res) => {
+  const result = await sql`SELECT version()`;
+  const { version } = result[0];
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end(version);
+};
 
 
 app.use(cors());
