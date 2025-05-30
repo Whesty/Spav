@@ -19,8 +19,8 @@
             <td>{{ calculateDuration(downtime) }}</td>
             <td>{{ downtime.description }}</td>
             <td>
-              <button @click="editDowntime(downtime)" class="action-btn">✏</button>
-              <button @click="deleteDowntime(downtime.id)" class="action-btn delete">🗑</button>
+              <button class="action-button edit" @click.stop="editDowntime(forklift)">✏️</button>
+              <button class="action-button delete" @click.stop="deleteDowntime(forklift.id)">❌</button>
             </td>
           </tr>
         </tbody>
@@ -110,8 +110,9 @@
         return (hoursStr + ' ' + minutesStr).trim() || '0м';
       },
       editDowntime(downtime) {
-    this.editedDowntime = { ...downtime };  // копия
-    this.showEditForm = true;
+        this.showEditForm = true;
+        this.editedDowntime = { ...downtime };  // копия
+    
   },
   async onSaved() {
     this.showEditForm = false;
