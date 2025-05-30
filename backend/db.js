@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-    DATABASE_URL: "postgresql://neondb_owner:npg_0vih5KTcUOCl@ep-red-wildflower-a8oh1588-pooler.eastus2.azure.neon.tech/neondb?sslmode=require",
+    DATABASE_URL: process.env.DATABASE_URL,
 });
 
 console.log('Connecting to DB:', {
@@ -10,6 +10,7 @@ console.log('Connecting to DB:', {
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
+    url: process.env.DATABASE_URL
   });
 
 
