@@ -31,8 +31,9 @@
   :forklifts="forklifts"
   :selectedForklift="selectedForklift"
   @close="showEditForm = false"
-  @saved="handleSaved"
+  @saved="onSaved"   
 />
+
       
     </div>
   </template>
@@ -56,13 +57,15 @@
       };
     },
     computed: {
-      filteredDowntimes() {
-        if (!this.selectedForkliftId) return [];
-        return this.downtimes
-          .filter(d => d.forklift_id === this.selectedForkliftId)
-          .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
-      }
-    },
+  selectedForklift() {
+    return this.forklifts.find(f => f.id === this.selectedForkliftId) || null;
+  },
+  filteredDowntimes() {
+    if (!this.selectedForkliftId) return [];
+    return this.downtimes
+      .filter(d => d.forklift_id === this.selectedForkliftId)
+      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+  }},
     methods: {
       async fetchDowntimes() {
         try {
@@ -107,9 +110,13 @@
         return (hoursStr + ' ' + minutesStr).trim() || '0м';
       },
       editDowntime(downtime) {
-  this.editedDowntime = downtime;
-  this.showEditForm = true;
-},
+    this.editedDowntime = { ...downtime };  // копия
+    this.showEditForm = true;
+  },
+  async onSaved() {
+    this.showEditForm = false;
+    await this.fetchDowntimes();
+  },
       async deleteDowntime(id) {
         if (!confirm('Удалить этот простой?')) return;
   
