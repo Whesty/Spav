@@ -71,8 +71,8 @@
         localDowntime: {
           ...this.downtime,
           forklift_id: this.selectedForklift ? this.selectedForklift.id : this.downtime.forklift_id || '',
-          start_time: this.downtime.start_time || this.getLocalDateTime(),
-          end_time: this.downtime.end_time || ''
+          start_time: this.getDateTime(this.downtime.start_time) || this.getLocalDateTime(),
+          end_time: this.getDateTime(this.downtime.end_time) || ''
         }
       };
     },
@@ -94,6 +94,11 @@
         const now = new Date();
         const tzOffset = now.getTimezoneOffset() * 60000;
         return new Date(now - tzOffset).toISOString().slice(0, 16);
+      },
+      getDateTime(time) {
+        
+        const tzOffset = time.getTimezoneOffset() * 60000;
+        return new Date(time - tzOffset).toISOString().slice(0, 16);
       },
       async saveDowntime() {
         if (this.saving) return;
