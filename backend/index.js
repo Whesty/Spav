@@ -10,7 +10,7 @@ const { neon } = require("@neondatabase/serverless");
 const app = express();
 require('dotenv').config();
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = neon('postgresql://neondb_owner:npg_0vih5KTcUOCl@ep-red-wildflower-a8oh1588-pooler.eastus2.azure.neon.tech/neondb?sslmode=require');
 
 const requestHandler = async (req, res) => {
   const result = await sql`SELECT version()`;
