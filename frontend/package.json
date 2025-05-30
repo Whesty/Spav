@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+     "checkperm": "ls -l node_modules/.bin/vite"
   },
   "dependencies": {
     "axios": "^1.9.0",
