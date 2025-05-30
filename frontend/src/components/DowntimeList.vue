@@ -95,6 +95,20 @@
         const minutesStr = minutes > 0 ? `${minutes}м` : '';
         return (hoursStr + ' ' + minutesStr).trim() || '0м';
       },
+      editDowntime(downtime) {
+      this.$emit('edit', downtime); // Родитель откроет форму
+    },
+    async deleteDowntime(id) {
+      if (!confirm('Удалить этот простой?')) return;
+
+      try {
+        await api.delete(`/downtimes/${id}`);
+        this.fetchDowntimes(); // Обновляем список
+      } catch (error) {
+        console.error('Ошибка при удалении простоя:', error);
+        alert('Не удалось удалить простой');
+      }
+    }
     },
     mounted() {
       this.fetchForklifts();
