@@ -1,37 +1,94 @@
 <template>
-    <!-- В шаблоне замените все v-model="downtime..." на v-model="localDowntime..." -->
-    <select v-if="!selectedForklift" v-model.number="localDowntime.forklift_id" required>
-      <!-- ... -->
-    </select>
-    
-    <input v-model="localDowntime.start_time" type="datetime-local" required />
-    <input v-model="localDowntime.end_time" type="datetime-local" />
-    <textarea v-model="localDowntime.description" required></textarea>
+    <div class="modal">
+      <div class="modal-content">
+        <h3>{{ localDowntime.id ? 'Редактирование простоя' : 'Новый простой' }}</h3>
+        <form @submit.prevent="saveDowntime" class="form">
+          <select v-if="!selectedForklift" v-model.number="localDowntime.forklift_id" required>
+            <option disabled value="">Выберите погрузчик</option>
+            <option v-for="forklift in forklifts" :key="forklift.id" :value="forklift.id">
+              {{ forklift.number }} ({{ forklift.brand }})
+            </option>
+          </select>
+  
+          <div v-else class="selected-forklift">
+            Выбран погрузчик: <strong>{{ selectedForklift.number }} ({{ selectedForklift.brand }})</strong>
+          </div>
+  
+          <div class="datetime-row">
+            <div class="datetime-block">
+              <label>Начало</label>
+              <input v-model="localDowntime.start_time" type="datetime-local" required />
+            </div>
+  
+            <div class="datetime-block">
+              <label>Окончание</label>
+              <input v-model="localDowntime.end_time" type="datetime-local" />
+            </div>
+          </div>
+  
+          <label>Описание инцидента:</label>
+          <textarea v-model="localDowntime.description" required></textarea>
+  
+          <div class="buttons">
+            <button type="submit" class="btn save" :disabled="saving">
+              {{ saving ? 'Сохранение...' : '💾 Сохранить' }}
+            </button>
+            <button type="button" @click="$emit('close')" class="btn cancel">✖ Отмена</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </template>
   
   <script>
+  import api from '@/api';
+  
   export default {
     props: {
-      // ... ваши пропсы без изменений
+      forklifts: {
+        type: Array,
+        required: true,
+      },
+      selectedForklift: {
+        type: Object,
+        default: null,
+      },
+      downtime: {
+        type: Object,
+        default: () => ({
+          id: null,
+          forklift_id: '',
+          start_time: '',
+          end_time: '',
+          description: ''
+        })
+      }
     },
     data() {
       return {
         saving: false,
-        localDowntime: this.initializeDowntime()
+        localDowntime: {
+          ...this.downtime,
+          forklift_id: this.selectedForklift ? this.selectedForklift.id : this.downtime.forklift_id || '',
+          start_time: this.downtime.start_time || this.getLocalDateTime(),
+          end_time: this.downtime.end_time || ''
+        }
       };
     },
-    methods: {
-      initializeDowntime() {
-        return {
-          id: this.downtime.id || null,
-          forklift_id: this.selectedForklift 
-            ? this.selectedForklift.id 
-            : this.downtime.forklift_id || '',
-          start_time: this.downtime.start_time || this.getLocalDateTime(),
-          end_time: this.downtime.end_time || '',
-          description: this.downtime.description || ''
-        };
+    watch: {
+      selectedForklift(newVal) {
+        if (newVal) {
+          this.localDowntime.forklift_id = newVal.id;
+        }
       },
+      downtime(newVal) {
+        this.localDowntime = {
+          ...newVal,
+          forklift_id: this.selectedForklift ? this.selectedForklift.id : newVal.forklift_id || ''
+        };
+      }
+    },
+    methods: {
       getLocalDateTime() {
         const now = new Date();
         const tzOffset = now.getTimezoneOffset() * 60000;
@@ -59,19 +116,6 @@
           console.error(error);
         } finally {
           this.saving = false;
-        }
-      }
-    },
-    watch: {
-      selectedForklift(newVal) {
-        if (newVal) {
-          this.localDowntime.forklift_id = newVal.id;
-        }
-      },
-      downtime: {
-        deep: true,
-        handler(newVal) {
-          this.localDowntime = this.initializeDowntime();
         }
       }
     }
@@ -186,4 +230,4 @@
   .cancel:hover {
     background-color: #c0392b;
   }
-  </style>
+  </style> 
