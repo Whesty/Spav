@@ -2,25 +2,30 @@
     <div class="downtime-container">
       <table class="styled-table">
         <thead>
-          <tr>
-            <th>Погрузчик</th>
-            <th>Начало простоя</th>
-            <th>Конец простоя</th>
-            <th>Длительность</th>
-            <th>Причина</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="downtime in filteredDowntimes" :key="downtime.id">
-            <td>{{ getForkliftNumber(downtime.forklift_id) }}</td>
-            <td>{{ formatDate(downtime.start_time) }}</td>
-            <td>{{ downtime.end_time ? formatDate(downtime.end_time) : '—' }}</td>
-            <td>{{ calculateDuration(downtime) }}</td>
-            <td>{{ downtime.description }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <tr>
+    <th>Погрузчик</th>
+    <th>Начало простоя</th>
+    <th>Конец простоя</th>
+    <th>Длительность</th>
+    <th>Причина</th>
+    <th>Действия</th> <!-- новый столбец -->
+  </tr>
+</thead>
+<tbody>
+  <tr v-for="downtime in filteredDowntimes" :key="downtime.id">
+    <td>{{ getForkliftNumber(downtime.forklift_id) }}</td>
+    <td>{{ formatDate(downtime.start_time) }}</td>
+    <td>{{ downtime.end_time ? formatDate(downtime.end_time) : '—' }}</td>
+    <td>{{ calculateDuration(downtime) }}</td>
+    <td>{{ downtime.description }}</td>
+    <td>
+      <button @click="editDowntime(downtime)" class="action-btn">✏</button>
+      <button @click="deleteDowntime(downtime.id)" class="action-btn delete">🗑</button>
+    </td>
+  </tr>
+</tbody>
+</table>
+</div>  
   </template>
   
   <script>
@@ -94,7 +99,22 @@
     mounted() {
       this.fetchForklifts();
       this.fetchDowntimes();
+    },
+    editDowntime(downtime) {
+    this.$emit('edit', downtime); // Родитель откроет форму с заполненными данными
+  },
+
+  async deleteDowntime(id) {
+    if (!confirm('Удалить этот простой?')) return;
+
+    try {
+      await api.delete(`/downtimes/${id}`);
+      this.fetchDowntimes(); // Обновляем список
+    } catch (error) {
+      console.error('Ошибка при удалении простоя:', error);
+      alert('Не удалось удалить простой');
     }
+  }
   };
   </script>
   
