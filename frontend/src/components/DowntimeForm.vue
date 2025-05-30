@@ -1,10 +1,8 @@
 <template>
     <div class="modal">
       <div class="modal-content">
-        <h3>Проблема с погрузчиком? Опишите</h3>
+        <h3>{{ downtime.id ? 'Редактирование простоя' : 'Новый простой' }}</h3>
         <form @submit.prevent="saveDowntime" class="form">
-  
-          <!-- Показываем селект, только если нет выбранного погрузчика -->
           <select v-if="!selectedForklift" v-model.number="downtime.forklift_id" required>
             <option disabled value="">Выберите погрузчик</option>
             <option v-for="forklift in forklifts" :key="forklift.id" :value="forklift.id">
@@ -12,7 +10,9 @@
             </option>
           </select>
   
-          <div v-else></div>
+          <div v-else class="selected-forklift">
+            Выбран погрузчик: <strong>{{ selectedForklift.number }} ({{ selectedForklift.brand }})</strong>
+          </div>
   
           <div class="datetime-row">
             <div class="datetime-block">
@@ -30,10 +30,11 @@
           <textarea v-model="downtime.description" required></textarea>
   
           <div class="buttons">
-            <button type="submit" class="btn save">💾 Сохранить</button>
+            <button type="submit" class="btn save" :disabled="saving">
+              {{ saving ? 'Сохранение...' : '💾 Сохранить' }}
+            </button>
             <button type="button" @click="$emit('close')" class="btn cancel">✖ Отмена</button>
           </div>
-  
         </form>
       </div>
     </div>
@@ -52,24 +53,39 @@
         type: Object,
         default: null,
       },
+      downtime: {
+        type: Object,
+        default: () => ({
+          id: null,
+          forklift_id: '',
+          start_time: '',
+          end_time: '',
+          description: ''
+        })
+      }
     },
     data() {
       return {
-        downtime: {
-          forklift_id: this.selectedForklift ? this.selectedForklift.id : '',
-          start_time: this.getLocalDateTime(),
-          end_time: '',
-          description: '',
-        },
         saving: false,
+        localDowntime: {
+          ...this.downtime,
+          forklift_id: this.selectedForklift ? this.selectedForklift.id : this.downtime.forklift_id || '',
+          start_time: this.downtime.start_time || this.getLocalDateTime(),
+          end_time: this.downtime.end_time || ''
+        }
       };
     },
     watch: {
       selectedForklift(newVal) {
-        // Если selectedForklift изменится - обновляем forklift_id, но только если downtime.forklift_id пустой
-        if (!this.downtime.forklift_id) {
-          this.downtime.forklift_id = newVal ? newVal.id : '';
+        if (newVal) {
+          this.localDowntime.forklift_id = newVal.id;
         }
+      },
+      downtime(newVal) {
+        this.localDowntime = {
+          ...newVal,
+          forklift_id: this.selectedForklift ? this.selectedForklift.id : newVal.forklift_id || ''
+        };
       }
     },
     methods: {
@@ -82,17 +98,15 @@
         if (this.saving) return;
         this.saving = true;
   
-        const payload = { ...this.downtime };
+        const payload = { ...this.localDowntime };
         if (!payload.end_time) {
           delete payload.end_time;
         }
   
         try {
           if (payload.id) {
-            // Обновляем существующий простой
             await api.put(`/downtimes/${payload.id}`, payload);
           } else {
-            // Создаем новый простой
             await api.post('/downtimes', payload);
           }
           this.$emit('saved');
@@ -103,30 +117,31 @@
         } finally {
           this.saving = false;
         }
-      },
-    },
+      }
+    }
   };
   </script>
-
-  
-  
   
   <style scoped>
   .modal {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0,0,0,0.5);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
   }
   
   .modal-content {
     background: white;
     padding: 24px;
     border-radius: 10px;
-    width: 420px;
-    max-width: 90%;
+    width: 500px;
+    max-width: 95%;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   }
   
@@ -135,6 +150,13 @@
     font-size: 18px;
     color: #333;
     text-align: center;
+  }
+  
+  .selected-forklift {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 5px;
   }
   
   label {
@@ -183,6 +205,7 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    transition: background-color 0.2s;
   }
   
   .save {
@@ -190,8 +213,13 @@
     color: white;
   }
   
-  .save:hover {
+  .save:hover:not(:disabled) {
     background-color: #36a173;
+  }
+  
+  .save:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
   }
   
   .cancel {
@@ -203,4 +231,3 @@
     background-color: #c0392b;
   }
   </style>
-  

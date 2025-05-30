@@ -31,7 +31,7 @@
   :forklifts="forklifts"
   :selectedForklift="selectedForklift"
   @close="showEditForm = false"
-  @saved="onSaved"
+  @saved="handleSaved"
 />
       
     </div>
