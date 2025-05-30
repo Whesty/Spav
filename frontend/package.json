@@ -10,7 +10,6 @@
     "checkperm": "ls -l node_modules/.bin/vite"
   },
   "dependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.41.1",
     "axios": "^1.9.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1"
