@@ -41,65 +41,84 @@
   </template>
   
   <script>
-  import api from '@/api';
-  
   export default {
-    props: {
-      forklifts: {
-        type: Array,
-        required: true,
-      },
-      selectedForklift: {
-        type: Object,
-        default: null,
-      },
+  props: {
+    forklifts: {
+      type: Array,
+      required: true,
     },
-    data() {
-      return {
-        downtime: {
-          forklift_id: this.selectedForklift ? this.selectedForklift.id : '',
-          start_time: this.getLocalDateTime(),
-          end_time: '',
-          description: '',
-        },
-        saving: false,
+    downtime: {   // сюда передаем объект простоя (для редактирования)
+      type: Object,
+      default: null,
+    },
+    selectedForklift: {
+      type: Object,
+      default: null,
+    },
+  },
+  data() {
+    return {
+      localDowntime: this.downtime
+        ? { ...this.downtime } // копия переданного объекта (для редактирования)
+        : {
+            forklift_id: this.selectedForklift ? this.selectedForklift.id : '',
+            start_time: this.getLocalDateTime(),
+            end_time: '',
+            description: '',
+          },
+      saving: false,
+    };
+  },
+  watch: {
+    downtime(newVal) {
+      this.localDowntime = newVal ? { ...newVal } : {
+        forklift_id: this.selectedForklift ? this.selectedForklift.id : '',
+        start_time: this.getLocalDateTime(),
+        end_time: '',
+        description: '',
       };
     },
-    watch: {
-      // Если selectedForklift изменится после создания компонента - обновим forklift_id
-      selectedForklift(newVal) {
-        this.downtime.forklift_id = newVal ? newVal.id : '';
+    selectedForklift(newVal) {
+      if (!this.localDowntime.forklift_id) {
+        this.localDowntime.forklift_id = newVal ? newVal.id : '';
       }
     },
-    methods: {
-      getLocalDateTime() {
-        const now = new Date();
-        const tzOffset = now.getTimezoneOffset() * 60000;
-        const localISOTime = new Date(now - tzOffset).toISOString().slice(0, 16);
-        return localISOTime;
-      },
-      async saveDowntime() {
-        if (this.saving) return;
-        this.saving = true;
-  
-        const payload = { ...this.downtime };
-        if (!payload.end_time) {
-          delete payload.end_time;
-        }
-  
-        try {
-          await api.post('/downtimes', payload);
-          this.$emit('saved');
-          this.$emit('close');
-        } catch (error) {
-          alert('Ошибка при сохранении простоя. Попробуйте ещё раз.');
-          console.error(error);
-        } finally {
-          this.saving = false;
-        }
-      },
+  },
+  methods: {
+    getLocalDateTime() {
+      const now = new Date();
+      const tzOffset = now.getTimezoneOffset() * 60000;
+      return new Date(now - tzOffset).toISOString().slice(0, 16);
     },
-  };
+    async saveDowntime() {
+      if (this.saving) return;
+      this.saving = true;
+
+      const payload = { ...this.localDowntime };
+      if (!payload.end_time) {
+        delete payload.end_time;
+      }
+
+      try {
+        if (payload.id) {
+          // если есть id — обновляем существующий простой
+          await api.put(`/downtimes/${payload.id}`, payload);
+        } else {
+          // если id нет — создаем новый простой
+          await api.post('/downtimes', payload);
+        }
+        this.$emit('saved');
+        this.$emit('close');
+      } catch (error) {
+        alert('Ошибка при сохранении простоя. Попробуйте ещё раз.');
+        console.error(error);
+      } finally {
+        this.saving = false;
+      }
+    },
+  },
+};
+
   </script>
   
   

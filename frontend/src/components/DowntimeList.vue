@@ -25,6 +25,15 @@
           </tr>
         </tbody>
       </table>
+      <DowntimeForm
+  v-if="showEditForm"
+  :downtime="editedDowntime"
+  :forklifts="forklifts"
+  :selectedForklift="selectedForklift"
+  @close="showEditForm = false"
+  @saved="onSaved"
+/>
+      
     </div>
   </template>
   
