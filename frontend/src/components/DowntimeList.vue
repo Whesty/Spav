@@ -148,6 +148,23 @@
     padding-left: 2px !important;
 
 }
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  margin-right: 4px;
+}
+
+.action-btn:hover {
+  opacity: 0.8;
+}
+
+.action-btn.delete {
+  color: red;
+}
+
 
   </style>
   
