@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://spav-aget.onrender.com',
+  baseURL: '52.41.36.82',
 });
 
 export default api;
