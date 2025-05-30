@@ -2,30 +2,30 @@
     <div class="downtime-container">
       <table class="styled-table">
         <thead>
-  <tr>
-    <th>Погрузчик</th>
-    <th>Начало простоя</th>
-    <th>Конец простоя</th>
-    <th>Длительность</th>
-    <th>Причина</th>
-    <th>Изменить</th> <!-- новый столбец -->
-  </tr>
-</thead>
-<tbody>
-  <tr v-for="downtime in filteredDowntimes" :key="downtime.id">
-    <td>{{ getForkliftNumber(downtime.forklift_id) }}</td>
-    <td>{{ formatDate(downtime.start_time) }}</td>
-    <td>{{ downtime.end_time ? formatDate(downtime.end_time) : '—' }}</td>
-    <td>{{ calculateDuration(downtime) }}</td>
-    <td>{{ downtime.description }}</td>
-    <td>
-      <button @click="editDowntime(downtime)" class="action-btn">✏</button>
-      <button @click="deleteDowntime(downtime.id)" class="action-btn delete">🗑</button>
-    </td>
-  </tr>
-</tbody>
-</table>
-</div>  
+          <tr>
+            <th>Погрузчик</th>
+            <th>Начало простоя</th>
+            <th>Конец простоя</th>
+            <th>Длительность</th>
+            <th>Причина</th>
+            <th>Изменить</th> <!-- новый столбец -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="downtime in filteredDowntimes" :key="downtime.id">
+            <td>{{ getForkliftNumber(downtime.forklift_id) }}</td>
+            <td>{{ formatDate(downtime.start_time) }}</td>
+            <td>{{ downtime.end_time ? formatDate(downtime.end_time) : '—' }}</td>
+            <td>{{ calculateDuration(downtime) }}</td>
+            <td>{{ downtime.description }}</td>
+            <td>
+              <button @click="editDowntime(downtime)" class="action-btn">✏</button>
+              <button @click="deleteDowntime(downtime.id)" class="action-btn delete">🗑</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </template>
   
   <script>
@@ -96,42 +96,26 @@
         return (hoursStr + ' ' + minutesStr).trim() || '0м';
       },
       editDowntime(downtime) {
-      this.$emit('edit', downtime); // Родитель откроет форму
-    },
-    async deleteDowntime(id) {
-      if (!confirm('Удалить этот простой?')) return;
-
-      try {
-        await api.delete(`/downtimes/${id}`);
-        this.fetchDowntimes(); // Обновляем список
-      } catch (error) {
-        console.error('Ошибка при удалении простоя:', error);
-        alert('Не удалось удалить простой');
+        this.$emit('edit', downtime); // Родитель должен слушать это событие и открыть форму
+      },
+      async deleteDowntime(id) {
+        if (!confirm('Удалить этот простой?')) return;
+  
+        try {
+          await api.delete(`/downtimes/${id}`);
+          this.fetchDowntimes();
+        } catch (error) {
+          console.error('Ошибка при удалении простоя:', error);
+          alert('Не удалось удалить простой');
+        }
       }
-    }
     },
     mounted() {
       this.fetchForklifts();
       this.fetchDowntimes();
-    },
-    editDowntime(downtime) {
-    this.$emit('edit', downtime); // Родитель откроет форму с заполненными данными
-  },
-
-  async deleteDowntime(id) {
-    if (!confirm('Удалить этот простой?')) return;
-
-    try {
-      await api.delete(`/downtimes/${id}`);
-      this.fetchDowntimes(); // Обновляем список
-    } catch (error) {
-      console.error('Ошибка при удалении простоя:', error);
-      alert('Не удалось удалить простой');
     }
-  }
   };
   </script>
-  
   
   <style scoped>
   .downtime-container {
@@ -148,37 +132,31 @@
     background-color: #f5f5f5;
   }
   
-  
   .styled-table tbody tr:hover {
     background-color: #f0f9ff;
   }
   .styled-table th,
-.styled-table td {
-  border: 1px solid #ddd;
-  padding: 12px 4px;
-  text-align: left;
-}
-.styled-table td:first-child {
+  .styled-table td {
+    border: 1px solid #ddd;
+    padding: 12px 4px;
+    text-align: left;
+  }
+  .styled-table td:first-child {
     padding-left: 2px !important;
-
-}
-.action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 4px;
-  margin-right: 4px;
-}
-
-.action-btn:hover {
-  opacity: 0.8;
-}
-
-.action-btn.delete {
-  color: red;
-}
-
-
+  }
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    margin-right: 4px;
+  }
+  .action-btn:hover {
+    opacity: 0.8;
+  }
+  .action-btn.delete {
+    color: red;
+  }
   </style>
   
