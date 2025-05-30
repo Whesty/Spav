@@ -8,7 +8,7 @@
             <th>Конец простоя</th>
             <th>Длительность</th>
             <th>Причина</th>
-            <th>Изменить</th> <!-- новый столбец -->
+            <th>Действия</th>
           </tr>
         </thead>
         <tbody>
@@ -19,29 +19,31 @@
             <td>{{ calculateDuration(downtime) }}</td>
             <td>{{ downtime.description }}</td>
             <td>
-              <button class="action-button edit" @click.stop="editDowntime(downtime)">✏️</button>
-              <button class="action-button delete" @click.stop="deleteDowntime(downtime.id)">❌</button>
+              <button @click="editDowntime(downtime)" class="action-btn edit">✏️</button>
+              <button @click="deleteDowntime(downtime.id)" class="action-btn delete">🗑️</button>
             </td>
           </tr>
         </tbody>
       </table>
+  
       <DowntimeForm
-  v-if="showEditForm"
-  :downtime="editedDowntime"
-  :forklifts="forklifts"
-  :selectedForklift="selectedForklift"
-  @close="showEditForm = false"
-  @saved="onSaved"   
-/>
-
-      
+        v-if="showEditForm"
+        :downtime="editedDowntime"
+        :forklifts="forklifts"
+        @close="closeEditForm"
+        @saved="handleSaved"
+      />
     </div>
   </template>
   
   <script>
   import api from '@/api';
+  import DowntimeForm from './DowntimeForm.vue';
   
   export default {
+    components: {
+      DowntimeForm
+    },
     props: {
       selectedForkliftId: {
         type: [Number, String],
@@ -52,23 +54,21 @@
       return {
         downtimes: [],
         forklifts: [],
-        showEditForm: false,         // показывать/скрывать форму
-    editedDowntime: null,
+        showEditForm: false,
+        editedDowntime: null
       };
     },
-    components: {
-    DowntimeForm,
-  },
     computed: {
-  selectedForklift() {
-    return this.forklifts.find(f => f.id === this.selectedForkliftId) || null;
-  },
-  filteredDowntimes() {
-    if (!this.selectedForkliftId) return [];
-    return this.downtimes
-      .filter(d => d.forklift_id === this.selectedForkliftId)
-      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
-  }},
+      selectedForklift() {
+        return this.forklifts.find(f => f.id === this.selectedForkliftId) || null;
+      },
+      filteredDowntimes() {
+        if (!this.selectedForkliftId) return this.downtimes;
+        return this.downtimes
+          .filter(d => d.forklift_id === this.selectedForkliftId)
+          .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+      }
+    },
     methods: {
       async fetchDowntimes() {
         try {
@@ -76,6 +76,7 @@
           this.downtimes = response.data;
         } catch (error) {
           console.error('Ошибка при загрузке простоев:', error);
+          alert('Не удалось загрузить данные о простоях');
         }
       },
       async fetchForklifts() {
@@ -108,86 +109,93 @@
         const hours = Math.floor(diffMs / (1000 * 60 * 60));
         const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
   
-        const hoursStr = hours > 0 ? `${hours}ч` : '';
-        const minutesStr = minutes > 0 ? `${minutes}м` : '';
-        return (hoursStr + ' ' + minutesStr).trim() || '0м';
+        return `${hours > 0 ? `${hours}ч ` : ''}${minutes}м`.trim();
       },
       editDowntime(downtime) {
+        this.editedDowntime = { ...downtime };
         this.showEditForm = true;
-        console.log('showEditForm = true')
-        this.editedDowntime = { ...downtime };  // копия
-    
-  },
-  async onSaved() {
-    this.showEditForm = false;
-    await this.fetchDowntimes();
-  },
+      },
+      closeEditForm() {
+        this.showEditForm = false;
+        this.editedDowntime = null;
+      },
+      async handleSaved() {
+        await this.fetchDowntimes();
+        this.closeEditForm();
+      },
       async deleteDowntime(id) {
         if (!confirm('Удалить этот простой?')) return;
   
         try {
           await api.delete(`/downtimes/${id}`);
-          this.fetchDowntimes();
+          await this.fetchDowntimes();
         } catch (error) {
           console.error('Ошибка при удалении простоя:', error);
           alert('Не удалось удалить простой');
         }
-      },
-      async onSaved() {
-  this.showEditForm = false;
-  await this.fetchDowntimes();  // обновляем данные после сохранения
-},
-
-
+      }
     },
-    
-    mounted() {
-      this.fetchForklifts();
-      this.fetchDowntimes();
+    async mounted() {
+      await this.fetchForklifts();
+      await this.fetchDowntimes();
     }
   };
   </script>
   
   <style scoped>
   .downtime-container {
+    margin: 20px 0;
     overflow-x: auto;
   }
   
   .styled-table {
+    width: 100%;
     border-collapse: collapse;
-    background-color: white;
-    font-size: 12px;
+    margin-top: 10px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
   }
   
-  .styled-table thead {
+  .styled-table th,
+  .styled-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .styled-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+  
+  .styled-table tr:hover {
     background-color: #f5f5f5;
   }
   
-  .styled-table tbody tr:hover {
-    background-color: #f0f9ff;
-  }
-  .styled-table th,
-  .styled-table td {
-    border: 1px solid #ddd;
-    padding: 12px 4px;
-    text-align: left;
-  }
-  .styled-table td:first-child {
-    padding-left: 2px !important;
-  }
   .action-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 16px;
-    padding: 4px;
-    margin-right: 4px;
+    padding: 5px;
+    margin: 0 3px;
+    transition: transform 0.2s;
   }
+  
   .action-btn:hover {
-    opacity: 0.8;
+    transform: scale(1.2);
   }
+  
+  .action-btn.edit {
+    color: #42b983;
+  }
+  
   .action-btn.delete {
-    color: red;
+    color: #e74c3c;
+  }
+  
+  .no-data {
+    text-align: center;
+    padding: 20px;
+    color: #666;
   }
   </style>
-  
