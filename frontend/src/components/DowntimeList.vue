@@ -111,6 +111,7 @@
       },
       editDowntime(downtime) {
         this.showEditForm = true;
+        console.log('showEditForm = true')
         this.editedDowntime = { ...downtime };  // копия
     
   },
