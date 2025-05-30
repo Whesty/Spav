@@ -142,7 +142,7 @@ app.post('/downtimes', async (req, res) => {
 });
 
 // Обновить простой (например, добавить end_time)
-app.patch('/downtimes/:id', async (req, res) => {
+app.put('/downtimes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { end_time, description } = req.body;
