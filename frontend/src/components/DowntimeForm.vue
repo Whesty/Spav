@@ -71,7 +71,7 @@
         localDowntime: {
           ...this.downtime,
           forklift_id: this.selectedForklift ? this.selectedForklift.id : this.downtime.forklift_id || '',
-          start_time: this.getDateTime(this.downtime.start_time) || this.getLocalDateTime(),
+          start_time: this.downtime.start_time ? this.getDateTime(this.downtime.start_time) : this.getLocalDateTime(),
            end_time: this.downtime.end_time ? this.formatDateTimeForInput(this.downtime.end_time) : ''
         }
       };
