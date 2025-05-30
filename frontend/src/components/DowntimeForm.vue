@@ -96,9 +96,9 @@
         return new Date(now - tzOffset).toISOString().slice(0, 16);
       },
       getDateTime(time) {
-        
-        const tzOffset = time.getTimezoneOffset() * 60000;
-        return new Date(time - tzOffset).toISOString().slice(0, 16);
+        const now = new Date(time);
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        return new Date(now - tzOffset).toISOString().slice(0, 16);
       },
       async saveDowntime() {
         if (this.saving) return;
