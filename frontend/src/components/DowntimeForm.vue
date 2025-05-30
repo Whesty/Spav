@@ -1,36 +1,40 @@
 <template>
     <div class="modal">
       <div class="modal-content">
+        <h3>Проблема с погрузчиком? Опишите</h3>
         <form @submit.prevent="saveDowntime" class="form">
-
-<select v-if="!selectedForklift" v-model.number="localDowntime.forklift_id" required>
-  <option disabled value="">Выберите погрузчик</option>
-  <option v-for="forklift in forklifts" :key="forklift.id" :value="forklift.id">
-    {{ forklift.number }} ({{ forklift.brand }})
-  </option>
-</select>
-
-<div class="datetime-row">
-  <div class="datetime-block">
-    <label>Начало</label>
-    <input v-model="localDowntime.start_time" type="datetime-local" required />
-  </div>
-
-  <div class="datetime-block">
-    <label>Окончание</label>
-    <input v-model="localDowntime.end_time" type="datetime-local" />
-  </div>
-</div>
-
-<label>Описание инцидента:</label>
-<textarea v-model="localDowntime.description" required></textarea>
-
-<div class="buttons">
-  <button type="submit" class="btn save">💾 Сохранить</button>
-  <button type="button" @click="$emit('close')" class="btn cancel">✖ Отмена</button>
-</div>
-
-</form>
+  
+          <!-- Показываем селект, только если нет выбранного погрузчика -->
+          <select v-if="!selectedForklift" v-model.number="downtime.forklift_id" required>
+            <option disabled value="">Выберите погрузчик</option>
+            <option v-for="forklift in forklifts" :key="forklift.id" :value="forklift.id">
+              {{ forklift.number }} ({{ forklift.brand }})
+            </option>
+          </select>
+  
+          <div v-else></div>
+  
+          <div class="datetime-row">
+            <div class="datetime-block">
+              <label>Начало</label>
+              <input v-model="downtime.start_time" type="datetime-local" required />
+            </div>
+  
+            <div class="datetime-block">
+              <label>Окончание</label>
+              <input v-model="downtime.end_time" type="datetime-local" />
+            </div>
+          </div>
+  
+          <label>Описание инцидента:</label>
+          <textarea v-model="downtime.description" required></textarea>
+  
+          <div class="buttons">
+            <button type="submit" class="btn save">💾 Сохранить</button>
+            <button type="button" @click="$emit('close')" class="btn cancel">✖ Отмена</button>
+          </div>
+  
+        </form>
       </div>
     </div>
   </template>
@@ -40,52 +44,71 @@
   
   export default {
     props: {
-      downtime: {
-        type: Object,
-        default: () => ({
-          forklift_id: null,
-          start_time: '',
-          end_time: '',
-          description: '',
-        }),
-      },
       forklifts: {
         type: Array,
         required: true,
       },
+      selectedForklift: {
+        type: Object,
+        default: null,
+      },
     },
     data() {
       return {
-        localDowntime: { ...this.downtime },
+        downtime: {
+          forklift_id: this.selectedForklift ? this.selectedForklift.id : '',
+          start_time: this.getLocalDateTime(),
+          end_time: '',
+          description: '',
+        },
+        saving: false,
       };
     },
-    computed: {
-      forkliftNumber() {
-        const forklift = this.forklifts.find(f => f.id === this.localDowntime.forklift_id);
-        return forklift ? forklift.number : '—';
-      }
-    },
     watch: {
-      downtime: {
-        immediate: true,
-        handler(newVal) {
-          this.localDowntime = { ...newVal };
+      selectedForklift(newVal) {
+        // Если selectedForklift изменится - обновляем forklift_id, но только если downtime.forklift_id пустой
+        if (!this.downtime.forklift_id) {
+          this.downtime.forklift_id = newVal ? newVal.id : '';
         }
       }
     },
     methods: {
+      getLocalDateTime() {
+        const now = new Date();
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        return new Date(now - tzOffset).toISOString().slice(0, 16);
+      },
       async saveDowntime() {
-        if (this.localDowntime.id) {
-          await api.put(`/downtimes/${this.localDowntime.id}`, this.localDowntime);
-        } else {
-          await api.post('/downtimes', this.localDowntime);
+        if (this.saving) return;
+        this.saving = true;
+  
+        const payload = { ...this.downtime };
+        if (!payload.end_time) {
+          delete payload.end_time;
         }
-        this.$emit('saved');
-        this.$emit('close');
+  
+        try {
+          if (payload.id) {
+            // Обновляем существующий простой
+            await api.put(`/downtimes/${payload.id}`, payload);
+          } else {
+            // Создаем новый простой
+            await api.post('/downtimes', payload);
+          }
+          this.$emit('saved');
+          this.$emit('close');
+        } catch (error) {
+          alert('Ошибка при сохранении простоя. Попробуйте ещё раз.');
+          console.error(error);
+        } finally {
+          this.saving = false;
+        }
       },
     },
   };
   </script>
+
+  
   
   
   <style scoped>
