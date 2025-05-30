@@ -51,6 +51,8 @@
       return {
         downtimes: [],
         forklifts: [],
+        showEditForm: false,         // показывать/скрывать форму
+    editedDowntime: null,
       };
     },
     computed: {
@@ -105,8 +107,9 @@
         return (hoursStr + ' ' + minutesStr).trim() || '0м';
       },
       editDowntime(downtime) {
-        this.$emit('edit', downtime); // Родитель должен слушать это событие и открыть форму
-      },
+  this.editedDowntime = downtime;
+  this.showEditForm = true;
+},
       async deleteDowntime(id) {
         if (!confirm('Удалить этот простой?')) return;
   
@@ -117,7 +120,12 @@
           console.error('Ошибка при удалении простоя:', error);
           alert('Не удалось удалить простой');
         }
-      }
+      },
+      async onSaved() {
+  this.showEditForm = false;
+  await this.fetchDowntimes();  // обновляем данные после сохранения
+},
+
     },
     mounted() {
       this.fetchForklifts();
