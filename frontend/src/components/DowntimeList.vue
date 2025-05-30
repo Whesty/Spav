@@ -19,8 +19,8 @@
             <td>{{ calculateDuration(downtime) }}</td>
             <td>{{ downtime.description }}</td>
             <td>
-              <button class="action-button edit" @click.stop="editDowntime(forklift)">✏️</button>
-              <button class="action-button delete" @click.stop="deleteDowntime(forklift.id)">❌</button>
+              <button class="action-button edit" @click.stop="editDowntime(downtime)">✏️</button>
+              <button class="action-button delete" @click.stop="deleteDowntime(downtime.id)">❌</button>
             </td>
           </tr>
         </tbody>
@@ -56,6 +56,9 @@
     editedDowntime: null,
       };
     },
+    components: {
+    DowntimeForm,
+  },
     computed: {
   selectedForklift() {
     return this.forklifts.find(f => f.id === this.selectedForkliftId) || null;
@@ -135,7 +138,9 @@
   await this.fetchDowntimes();  // обновляем данные после сохранения
 },
 
+
     },
+    
     mounted() {
       this.fetchForklifts();
       this.fetchDowntimes();
