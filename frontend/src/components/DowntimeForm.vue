@@ -65,7 +65,7 @@
       }
     },
     data() {
-        console.log(downtime);
+        console.log(this.downtime);
       return {
         saving: false,
         localDowntime: {
